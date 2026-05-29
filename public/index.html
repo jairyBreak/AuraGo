@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AuraGo</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="app-container">
+        <div id="screen-query" class="screen active">
+            <div class="logo-container">
+                <img src="logo.png" alt="AuraGo Logo" style="width: 100px; border-radius: 20px; margin-bottom: 8px;">
+                <div class="logo-text">AuraGo</div>
+                <p class="slogan">Smart trip, fine weather.</p>
+            </div>
+
+            <div class="tab-container mode-tabs">
+                <button class="tab-btn active" data-mode="route">📍 指定路線</button>
+                <button class="tab-btn" data-mode="area">🗺️ 區域探索</button>
+            </div>
+
+            <div id="mode-route" class="location-section active">
+                <div class="search-group">
+                    <div class="search-icon">🟢</div>
+                    <div class="input-wrapper">
+                        <input type="text" id="start-point" class="search-input" placeholder="選擇出發點" autocomplete="off">
+                        <button class="btn-locate" id="btn-get-location" title="使用目前位置">📍</button>
+                        <ul class="autocomplete-list" id="start-suggestions"></ul>
+                    </div>
+                </div>
+                <div class="route-line">⋮</div>
+                <div class="search-group">
+                    <div class="search-icon">🔴</div>
+                    <div class="input-wrapper">
+                        <input type="text" id="end-point" class="search-input" placeholder="選擇目的地" autocomplete="off">
+                        <ul class="autocomplete-list" id="end-suggestions"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="mode-area" class="location-section" style="display: none;">
+                <div class="form-group">
+                    <label>選擇縣市 (可複選)</label>
+                    <select id="city-select" class="form-control" multiple size="4"></select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>想探索哪些區域？ (可複選)</label>
+                    <select id="district-select" class="form-control" multiple size="4" disabled>
+                        <option value="" disabled>請先選擇縣市</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr style="border: 0; height: 1px; background: #eee; margin: 15px 25px;">
+
+            <div class="preference-section">
+                <div class="form-group">
+                    <label>旅行形式</label>
+                    <select id="travel-style" class="form-control">
+                        <option value="sightseeing" selected>📸 觀光景點</option>
+                        <option value="food">🍽️ 尋找美食</option>
+                        <option value="leisure">🚶 悠閒放鬆</option>
+                        <option value="sports">🚴 戶外運動</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>景點喜好 (可複選)</label>
+                    <div class="tag-group" id="interest-tags">
+                        <label class="tag-label"><input type="checkbox" value="古蹟" checked> 🏛️ 古蹟文化</label>
+                        <label class="tag-label"><input type="checkbox" value="生態,自然風景"> 🌳 自然生態</label>
+                        <label class="tag-label"><input type="checkbox" value="藝術,展覽"> 🎨 藝文展覽</label>
+                        <label class="tag-label"><input type="checkbox" value="遊憩,商業"> 🛍️ 購物娛樂</label>
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border: 0; height: 1px; background: #eee; margin: 15px 25px;">
+
+            <div class="tab-container type-tabs">
+                <button class="tab-btn active" data-type="single">單日遊</button>
+                <button class="tab-btn" data-type="multi">多日遊</button>
+            </div>
+
+            <div id="form-single" class="trip-form active">
+                <div class="form-group"><label>日期</label><input type="date" class="form-control" id="single-date"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>開始</label><select class="form-control"><option selected>09:00</option></select></div>
+                    <div class="form-group"><label>結束</label><select class="form-control"><option selected>18:00</option></select></div>
+                </div>
+            </div>
+
+            <div id="form-multi" class="trip-form">
+                <div class="form-group"><label>出發</label><div class="form-row"><input type="date" class="form-control" id="multi-start-date"><select class="form-control"><option selected>09:00</option></select></div></div>
+                <div class="form-group"><label>結束</label><div class="form-row"><input type="date" class="form-control" id="multi-end-date"><select class="form-control"><option selected>18:00</option></select></div></div>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="allday">
+                <label for="allday">整日行程 (自動規劃最佳時段)</label>
+            </div>
+
+            <button class="btn-primary" id="btn-search">🌍 雲端智能規劃</button>
+        </div>
+
+        <div id="screen-result" class="screen">
+            <div class="nav-bar">
+                <button class="back-btn" id="btn-back">← 返回</button>
+                <div class="mini-logo">⛅ AuraGo</div>
+            </div>
+            
+            <div id="map"></div>
+            
+            <div class="route-legend" id="route-legend"></div>
+            
+            <div class="info-section">
+                <h3 id="result-title">路線詳細行程</h3>
+                <ul class="timeline" id="timeline-list"></ul>
+            </div>
+            <button class="btn-secondary" id="btn-navigate">開始路線導覽</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
